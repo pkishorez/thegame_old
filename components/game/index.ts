@@ -7,6 +7,7 @@ import { interpolate } from "./components/utils";
 
 const sound = new Howl({
   src: "/game.mp3",
+  loop: true,
 });
 
 const soundOnLoad = new Promise((resolve) => {
@@ -92,6 +93,7 @@ export const init = async (
       slowedDown = true;
       await sleepTimeout(10000);
       speedController(1, 100);
+      slowedDown = false;
     }
   });
   let score = 0;

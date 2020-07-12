@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build",
+    "export": "NODE_ENV=production next build && NODE_ENV=production next export -o docs/",
     "format": "prettier --write \"src/**/*.js\"",
     "lint": "prettier --check \"src/**/*.js\""
   },
