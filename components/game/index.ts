@@ -6,7 +6,7 @@ import { Howl } from "howler";
 import { interpolate } from "./components/utils";
 
 const sound = new Howl({
-  src: "/game.mp3",
+  src: "/thegame/game.mp3",
   loop: true,
 });
 
