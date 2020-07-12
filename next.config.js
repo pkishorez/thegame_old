@@ -1,3 +1,3 @@
 module.exports = {
-  assetsPrefix: "/thegame",
+  assetPrefix: "/thegame",
 };
