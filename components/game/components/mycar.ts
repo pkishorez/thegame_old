@@ -1,5 +1,5 @@
-import { ILimitedConfig } from '../canvas';
-import { getLanePosition } from './utils';
+import { ILimitedConfig } from "../canvas";
+import { getLanePosition } from "./utils";
 
 interface ICarConfig {
   height: number;
@@ -18,28 +18,31 @@ export function initMyCar(carConfig: ICarConfig, config: ILimitedConfig) {
     },
   });
   myCar.setPositon(
-    getLanePosition(config.canvasWidth, 'left') - carConfig.width / 2,
-    config.canvasHeight - carConfig.height - 20,
+    getLanePosition(config.canvasWidth, "left") - carConfig.width / 2,
+    config.canvasHeight + 20
   );
-  console.log(myCar.top(), myCar.left());
 
-  let position: 'left' | 'right' = 'left';
+  let position: "left" | "right" = "left";
   let currentPosition = myCar.left();
 
   const carLanePosition = {
-    left: getLanePosition(config.canvasWidth, 'left') - carConfig.width / 2,
-    right: getLanePosition(config.canvasWidth, 'right') - carConfig.width / 2,
+    left: getLanePosition(config.canvasWidth, "left") - carConfig.width / 2,
+    right: getLanePosition(config.canvasWidth, "right") - carConfig.width / 2,
   };
 
   return {
-    move(direction: 'left' | 'right') {
+    move(direction: "left" | "right") {
       position = direction;
-      console.log('POSITION', position);
+      console.log("POSITION", position);
     },
     currentPosition() {
       return position;
     },
     tick(speed = 1) {
+      if (myCar.top() !== config.canvasHeight - carConfig.height - 20) {
+        // Move car!
+        myCar.moveY(-1);
+      }
       if (currentPosition !== carLanePosition[position]) {
         // TICK
         const diff = carLanePosition[position] - currentPosition;

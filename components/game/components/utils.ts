@@ -10,6 +10,7 @@ export const getRandomLane = () => {
 };
 
 export const interpolate = (current, target, step = 0.01) => {
+  step = Math.abs(step);
   if (current < target) {
     const value = current + step;
     if (value > target) {

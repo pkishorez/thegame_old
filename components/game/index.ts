@@ -18,6 +18,7 @@ export interface IStats {
   score: number;
   speed: number;
   volume: number;
+  soundRate: number;
 }
 export const init = async (
   canvas: HTMLCanvasElement,
@@ -27,14 +28,33 @@ export const init = async (
 ) => {
   await soundOnLoad;
   requestedAnimation && cancelAnimationFrame(requestedAnimation);
-  sound.volume(0);
+  var currentSpeed = 2;
+  var targetSpeed = 15;
+  var speedInterpolator = 0.01;
+
+  var currentVolume = 0.2;
+  var targetVolume = 1;
+  var volumeInterpolator = 0.01;
+
+  sound.volume(currentVolume);
   sound.play();
-  let targetVolume = 1;
-  let targetSpeed = 15;
-  let speedInterpolator = 0.01;
-  let currentSpeed = 0;
-  let currentVolume = 0;
-  let volumeInterpolator = 0.001;
+
+  var currentSoundRate = 1;
+  var targetSoundRate = 1;
+  var soundRateInterpolator = 1;
+
+  const speedController = (control, slices = 100) => {
+    const [minSoundRate, maxSoundRate] = [0.5, 1];
+    const [minSpeed, maxSpeed] = [2, 15];
+
+    targetSoundRate = minSoundRate + (maxSoundRate - minSoundRate) * control;
+    soundRateInterpolator = Math.abs(
+      (targetSoundRate - currentSoundRate) / slices
+    );
+
+    targetSpeed = minSpeed + (maxSpeed - minSpeed) * control;
+    speedInterpolator = Math.abs((targetSpeed - currentSpeed) / slices);
+  };
 
   const playground = new Canvas(canvas, {
     width,
@@ -62,17 +82,56 @@ export const init = async (
     { color: "cyan", height: 100, width: 50, baseSpeed: 4 },
     playground.limitedConfig()
   );
-  window.addEventListener("keydown", (ev) => {
+  let slowedDown = false;
+  window.addEventListener("keydown", async (ev) => {
     if (ev.key === "ArrowLeft") myCar.move("left");
     if (ev.key === "ArrowRight") myCar.move("right");
+    if (ev.key === "r") {
+      speedController(0, 100);
+      await sleepTimeout(1000);
+      slowedDown = true;
+      await sleepTimeout(10000);
+      speedController(1, 100);
+    }
   });
   let score = 0;
+  playground.render();
+
+  // Entrance...
+  var sleepTimeout = (time: number) =>
+    new Promise((resolve) => setTimeout(resolve, time));
+  entrance();
+  async function entrance() {
+    await sleepTimeout(1000);
+    let requestedFrame;
+    function entDividers() {
+      dividers.tick(currentSpeed);
+      requestedFrame = requestAnimationFrame(entDividers);
+      playground.render();
+    }
+    entDividers();
+    await sleepTimeout(1000);
+    cancelAnimationFrame(requestedFrame);
+    function entMyCar() {
+      dividers.tick(currentSpeed);
+      myCar.tick(currentSpeed / 2);
+      requestedFrame = requestAnimationFrame(entMyCar);
+      playground.render();
+    }
+    entMyCar();
+    await sleepTimeout(3000);
+    cancelAnimationFrame(requestedFrame);
+    tick();
+  }
+
   function tick() {
     dividers.tick(currentSpeed);
     opponents.tick(currentSpeed);
     const opponentLane = opponents.lastOpponent().lane;
-    myCar.move(opponentLane === "left" ? "right" : "left");
-    myCar.tick(currentSpeed);
+    if (!slowedDown) {
+      myCar.move(opponentLane === "left" ? "right" : "left");
+    }
+    myCar.tick(currentSpeed / 2);
     playground.render();
     requestedAnimation = requestAnimationFrame(tick);
     score++;
@@ -82,13 +141,18 @@ export const init = async (
       targetVolume,
       volumeInterpolator
     );
-    currentVolume < 1 && sound.volume(currentVolume);
+    sound.volume(currentVolume);
+    currentSoundRate = interpolate(
+      currentSoundRate,
+      targetSoundRate,
+      soundRateInterpolator
+    );
+    sound.rate(currentSoundRate);
     onChange({
       score,
       speed: currentSpeed,
       volume: currentVolume,
+      soundRate: currentSoundRate,
     });
   }
-  playground.render();
-  tick();
 };
